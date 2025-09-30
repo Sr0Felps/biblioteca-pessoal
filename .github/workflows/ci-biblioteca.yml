@@ -1,0 +1,34 @@
+name: CI/CD - Gerenciador de Biblioteca Pessoal
+
+# O pipeline deve ser acionado por push ou pull_request para a branch main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 1. JOB: build (Build & Test)
+  build:
+    # Nome de exibição conforme requisito
+    name: Build & Test
+    # Sistema operacional onde o job será executado
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código
+        # Ação oficial para baixar o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        # Configura o ambiente Java, usando a versão 21 que está no seu pom.xml
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven' # Habilita o cache de dependências Maven
+
+      - name: Compilar e Rodar Testes
+        # Rodar o comando Maven que compila e executa testes.
+        # O pipeline falhará neste job se os testes não passarem, como requerido.
+        run: mvn -B verify
