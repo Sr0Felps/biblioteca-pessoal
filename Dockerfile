@@ -1,7 +1,7 @@
 # ==========================================================
 # ESTÁGIO 1: BUILD - AGORA COM MAVEN E JDK (Versão 3.9.6 do Maven e JDK 21)
 # ==========================================================
-FROM maven:3.9.6-jdk-21 AS build
+FROM maven:3-jdk-21 AS build
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
