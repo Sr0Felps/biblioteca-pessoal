@@ -7,28 +7,108 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  # Define o nome base para a imagem Docker (ex: sr0felps/biblioteca-pessoal)
+  IMAGE_NAME: ${{ github.repository }}
+  # Define o tag da imagem a ser usada nos deploys (o SHA do commit)
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   # 1. JOB: build (Build & Test)
   build:
-    # Nome de exibição conforme requisito
     name: Build & Test
-    # Sistema operacional onde o job será executado
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Código
-        # Ação oficial para baixar o código do repositório
         uses: actions/checkout@v4
 
       - name: Set up Java
-        # Configura o ambiente Java, usando a versão 21 que está no seu pom.xml
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'maven' # Habilita o cache de dependências Maven
+          cache: 'maven'
 
       - name: Compilar e Rodar Testes
-        # Rodar o comando Maven que compila e executa testes.
         # O pipeline falhará neste job se os testes não passarem, como requerido.
         run: mvn -B verify
+
+  # 2. JOB: docker (Build & Push Docker Image)
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+
+    # Dependência: Só deve ser executado após o sucesso do job build.
+    needs: [build]
+
+    # Permissão necessária para publicar a imagem no GitHub Container Registry (GHCR)
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Login no GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Tags da Imagem
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.IMAGE_NAME }}
+          # Tags: SHA do commit e 'latest' (se for na main)
+          tags: |
+            type=sha
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+      - name: Build e Push da Imagem Docker
+        uses: docker/build-and-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # 3. JOB: deploy-dev (Deploy to Development)
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+
+    # Dependência: Só deve ser executado após o sucesso do job docker.
+    needs: [docker]
+
+    # Aponta para o ambiente de 'development'
+    environment: development
+
+    steps:
+      - name: Simular Implantação em Desenvolvimento
+        # Em um cenário real, você faria login em um servidor ou em um serviço de Cloud.
+        run: |
+          echo "Simulando deploy da imagem ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} para o ambiente DEVELOPMENT..."
+          echo "Deploy em Development concluído."
+
+  # 4. JOB: deploy-prod (Deploy to Production)
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    # Dependência: Só deve ser executado após o sucesso do job deploy-dev.
+    needs: [deploy-dev]
+
+    # Aponta para o ambiente de 'production'.
+    # A aprovação manual é configurada DENTRO das Settings do GitHub para este ambiente.
+    environment: production
+
+    steps:
+      - name: Simular Implantação em Produção
+        # Em um cenário real, você faria login em um servidor ou em um serviço de Cloud.
+        run: |
+          echo "Simulando deploy da imagem ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} para o ambiente PRODUCTION..."
+          echo "Deploy em Production concluído."
