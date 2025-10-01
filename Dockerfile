@@ -1,7 +1,8 @@
 # ==========================================================
 # ESTÁGIO 1: BUILD - Usando a tag OFICIAL: maven:<versão>-eclipse-temurin
 # ==========================================================
-FROM maven:3.9.11-eclipse-temurin AS build # TAG CORRIGIDA E EXPLÍCITA
+# A tag "maven:3.9.11-eclipse-temurin" inclui o Maven 3.9 e o JDK 21.
+FROM maven:3.9.11-eclipse-temurin AS build
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
