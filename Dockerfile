@@ -1,7 +1,7 @@
 # ==========================================================
-# ESTÁGIO 1: BUILD - AGORA COM MAVEN E JDK (Versão 3.9.6 do Maven e JDK 21)
+# ESTÁGIO 1: BUILD - Usando a tag OFICIAL: maven:<versão>-eclipse-temurin
 # ==========================================================
-FROM maven:3-jdk-21 AS build
+FROM maven:3.9.11-eclipse-temurin AS build # TAG CORRIGIDA E EXPLÍCITA
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
@@ -19,7 +19,6 @@ RUN mvn package -DskipTests
 # ==========================================================
 # ESTÁGIO 2: RUNTIME - Imagem final mais leve apenas com JRE
 # ==========================================================
-# O estágio final permanece o mesmo, usando a imagem leve do JRE
 FROM eclipse-temurin:21-jre-jammy AS final
 
 # O Spring Boot JAR precisa de uma variável de ambiente para funcionar
