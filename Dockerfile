@@ -1,8 +1,7 @@
 # ==========================================================
-# ESTÁGIO 1: BUILD - Para compilar a aplicação e gerar o JAR
+# ESTÁGIO 1: BUILD - AGORA COM MAVEN E JDK (Versão 3.9.6 do Maven e JDK 21)
 # ==========================================================
-# Use uma imagem com JDK e Maven para o processo de build.
-FROM eclipse-temurin:21-jdk-jammy AS build
+FROM maven:3.9.6-jdk-21 AS build
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
@@ -15,17 +14,12 @@ RUN mvn dependency:go-offline
 COPY src /app/src
 
 # Empacota o projeto em um arquivo JAR executável
-# O '-DskipTests' é usado aqui apenas para acelerar o Docker build local.
-# No pipeline de CI, rodaremos os testes no Job 'build' separadamente.
 RUN mvn package -DskipTests
-
-# O JAR resultante estará em /app/target/biblioteca-pessoal-0.0.1-SNAPSHOT.jar
-# (O nome do JAR é baseado no <artifactId>-<version> do seu pom.xml)
 
 # ==========================================================
 # ESTÁGIO 2: RUNTIME - Imagem final mais leve apenas com JRE
 # ==========================================================
-# Use uma imagem com JRE (Java Runtime Environment) apenas
+# O estágio final permanece o mesmo, usando a imagem leve do JRE
 FROM eclipse-temurin:21-jre-jammy AS final
 
 # O Spring Boot JAR precisa de uma variável de ambiente para funcionar
