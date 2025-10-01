@@ -31,7 +31,6 @@ jobs:
           cache: 'maven'
 
       - name: Compilar e Rodar Testes
-        # O pipeline falhará neste job se os testes não passarem, como requerido.
         run: mvn -B verify
 
   # 2. JOB: docker (Build & Push Docker Image)
@@ -63,13 +62,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ env.IMAGE_NAME }}
-          # Tags: SHA do commit e 'latest' (se for na main)
           tags: |
             type=sha
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build e Push da Imagem Docker
-        uses: docker/build-and-push-action@v5
+        # AÇÃO CORRIGIDA: Usa 'build-push-action' (sem '-and-')
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -89,7 +88,6 @@ jobs:
 
     steps:
       - name: Simular Implantação em Desenvolvimento
-        # Em um cenário real, você faria login em um servidor ou em um serviço de Cloud.
         run: |
           echo "Simulando deploy da imagem ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} para o ambiente DEVELOPMENT..."
           echo "Deploy em Development concluído."
@@ -103,12 +101,11 @@ jobs:
     needs: [deploy-dev]
 
     # Aponta para o ambiente de 'production'.
-    # A aprovação manual é configurada DENTRO das Settings do GitHub para este ambiente.
+    # A aprovação manual é configurada nas Settings do GitHub.
     environment: production
 
     steps:
       - name: Simular Implantação em Produção
-        # Em um cenário real, você faria login em um servidor ou em um serviço de Cloud.
         run: |
           echo "Simulando deploy da imagem ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} para o ambiente PRODUCTION..."
           echo "Deploy em Production concluído."
